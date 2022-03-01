@@ -34,6 +34,21 @@ async function run() {
 
         })
 
+        app.post('/products', async (req, res) => {
+            const product = req.body
+            const result = await productCollection.insertOne(product)
+            res.send(result)
+        })
+
+
+        app.delete('/products/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: ObjectId(id) }
+            const result = await productCollection.deleteOne(query)
+            res.send(result)
+        })
+
+
 
         //addtocart
         app.post('/addtocart', async (req, res) => {
@@ -84,6 +99,12 @@ async function run() {
             const result = await orderCollection.insertOne(order);
             res.json(result)
         })
+
+        //get all orders
+        app.get('/allorders', async (req, res) => {
+            const data = await orderCollection.find({}).toArray()
+            res.send(data)
+        })
         //Get Orders APi
         app.get('/orders', async (req, res) => {
             const email = req.query.email;
@@ -92,6 +113,19 @@ async function run() {
             const orders = await cursor.toArray();
             res.json(orders)
 
+        })
+
+        //update order status
+        app.put('/orders/:id', async (req, res) => {
+            const filter = { _id: ObjectId(req.params.id) }
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: {
+                    status: "Delivered"
+                },
+            };
+            const result = await orderCollection.updateOne(filter, updateDoc, options);
+            res.send(result)
         })
 
 
@@ -103,6 +137,17 @@ async function run() {
             res.send(result)
         })
 
+        //get admin
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true
+            }
+            res.json({ admin: isAdmin })
+        })
 
 
 
@@ -118,7 +163,7 @@ run().catch(console.dir)
 
 
 app.get('/', (req, res) => {
-    res.send('This is Tech Shop Server')
+    res.send('This is Ontik Shop Server')
 })
 
 app.listen(port, () => {
